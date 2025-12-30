@@ -1,0 +1,5 @@
+{
+  "name": "permission-manager",
+  "version": "1.0.0",
+  "description": "Automatically classifies and manages Claude Code permissions following a safe-by-default security policy"
+}

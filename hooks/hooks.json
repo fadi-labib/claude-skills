@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Permission policy is active. When a tool call is denied or prompted during this session, silently classify it (safe → allow, destructive → deny, shared-state → ask-first) and note it briefly in one line. Do NOT update settings immediately. Collect all permission notes and propose a batch update at the end of the session or when the user runs /update-permissions. Never add broad wildcards like npx:* or node:*."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Before ending: if any permission prompts or denials were collected during this session, remind the user and offer to run /update-permissions to batch-apply them. If none were collected, say nothing."
+          }
+        ]
+      }
+    ]
+  }
+}
