@@ -1,10 +1,15 @@
 {
   "name": "claude-skills",
   "description": "Local plugin marketplace for Claude Code",
+  "owner": {
+    "name": "Fadi Labib",
+    "email": "github@fadilabib.com"
+  },
   "plugins": [
     {
       "name": "permission-manager",
-      "path": "./permission-manager"
+      "description": "Automatically classifies and manages Claude Code permissions following a safe-by-default security policy",
+      "source": "./permission-manager"
     }
   ]
 }
