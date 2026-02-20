@@ -70,6 +70,13 @@ These are common commands pre-classified for quick reference. For anything not l
 - `gh issue list`, `gh issue view`, `gh issue status`
 - `gh repo view`, `gh api`, `gh auth status`, `gh run list`, `gh run view`
 
+**Built-in tools (local file operations, all reversible via git):**
+- `Edit`, `Write` — file modifications, tracked by git, easily reversible
+- `Read`, `Glob`, `Grep` — read-only, zero risk
+- `Task` — launches subagents, local only
+- `Skill`, `ToolSearch` — tool discovery, zero risk
+- `NotebookEdit` — notebook modifications, tracked by git
+
 **MCP tools — apply the same decision framework:**
 - Read/search/list tools from any MCP server → ALLOW (same risk as the `Read`/`Grep` built-in tools)
 - Edit/write/create tools from any MCP server → ALLOW (same risk as `Edit`/`Write` built-in tools)
@@ -137,13 +144,13 @@ If the command uses `&&`, `||`, or `;` to chain multiple commands, classify each
 
 When the user is wrapping up, or when `/update-permissions` is invoked:
 
-1. **Read** the current `.claude/settings.local.json` (project-level). If it doesn't exist, check `~/.claude/settings.json` (global)
-2. **Audit existing patterns** for security issues:
-   - Flag overly broad wildcards (e.g., `Bash(git:*)`, `Bash(npx:*)`, `Bash(node:*)`) that match destructive commands
-   - For each broad pattern, propose specific replacements using the known patterns list
-   - Present these as a separate "Security Audit" section before the new permissions table
-3. **Scan the conversation** for any permission denials or prompts you may have missed (don't rely solely on memory — context compression may have dropped earlier notes)
-4. **Present a summary table** of all collected permissions:
+1. **Read** the current `.claude/settings.local.json` (project-level) AND `~/.claude/settings.json` (global). You need both to know what's already allowed.
+2. **Cross-reference tools against allow lists** — do NOT rely on memory alone (context compression drops permission prompts). Instead:
+   a. List every distinct tool you used in this session (built-in tools like `Edit`, `Write`, `Read`, `Task`, plus all `Bash(command:*)` patterns, plus any MCP tools)
+   b. Check each one against the combined allow lists from both settings files
+   c. Any tool that was used but is NOT in either allow list is a candidate — it was either prompted or will be prompted next time
+   d. Classify each candidate using the decision framework
+3. **Present a summary table** of all candidates found (both from cross-referencing AND any prompts you remember):
 
 | Command | Pattern | Classification | Reason |
 |---------|---------|---------------|--------|
@@ -151,11 +158,11 @@ When the user is wrapping up, or when `/update-permissions` is invoked:
 | `node -e "..."` | `Bash(node -e:*)` | Deny | Escape hatch |
 | `git push` | — | Ask first | Affects remote |
 
-5. **Ask which settings file** to update: "Add to project settings (`.claude/settings.local.json`) or global (`~/.claude/settings.json`)?" Default to project-level if one exists.
-6. **Ask for confirmation**: "Want me to add these to your settings?"
-7. **On approval**: Read the current settings, add the new patterns, write the updated file
-8. **Skip duplicates**: Don't add patterns already in the list
-9. **Report what changed**: Show the user exactly what was added
+4. **Ask which settings file** to update: "Add to project settings (`.claude/settings.local.json`) or global (`~/.claude/settings.json`)?" Default to project-level if one exists.
+5. **Ask for confirmation**: "Want me to add these to your settings?"
+6. **On approval**: Read the current settings, add the new patterns, write the updated file
+7. **Skip duplicates**: Don't add patterns already in the list
+8. **Report what changed**: Show the user exactly what was added
 
 ## Pattern Format
 
@@ -169,20 +176,6 @@ Examples:
 - `Bash(git status:*)` — matches `git status`, `git status --short`, etc.
 - `Bash(pnpm test:*)` — matches `pnpm test`, `pnpm test:unit`, etc.
 - `Bash(npx prisma generate:*)` — matches only prisma generate, not other npx commands
-
-## Security Audit: Broad Wildcards
-
-When auditing existing settings, flag any pattern that matches an entire command namespace. These are dangerous because they auto-allow destructive subcommands:
-
-| Broad Pattern | Risk | Safe Replacements |
-|---------------|------|-------------------|
-| `Bash(git:*)` | Matches `git push --force`, `git reset --hard`, `git clean -f` | Use individual safe git commands (status, diff, log, show, add, commit, fetch, stash, branch, rev-parse, merge-base, remote, blame, shortlog, reflog, tag, worktree) |
-| `Bash(npx:*)` | Matches any npx command including arbitrary code execution | Use specific tool patterns like `Bash(npx prisma generate:*)`, `Bash(npx tsc:*)` |
-| `Bash(node:*)` | Matches `node -e` (escape hatch) | Use `Bash(node --version:*)` or specific script patterns |
-| `Bash(npm:*)` | Matches `npm exec` which can run arbitrary code | Use `Bash(npm install:*)`, `Bash(npm test:*)`, `Bash(npm run:*)` |
-| `Bash(docker:*)` | Matches `docker rm`, `docker rmi --force` | Use specific docker compose/ps/logs patterns |
-
-When you find a broad wildcard, **always recommend replacing it** with the specific safe subcommands from the Known Patterns section. Present the replacement as a table showing what's being expanded and what stays as ask-first.
 
 ## Important
 
