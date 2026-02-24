@@ -10,6 +10,11 @@
       "name": "permission-manager",
       "description": "Automatically classifies and manages Claude Code permissions following a safe-by-default security policy",
       "source": "./permission-manager"
+    },
+    {
+      "name": "natural-writing",
+      "description": "Write like a specific, opinionated human — bans AI-tell vocabulary and patterns, enforces concrete details over generic praise",
+      "source": "./natural-writing"
     }
   ]
 }
