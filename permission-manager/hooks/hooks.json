@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Permission policy is active. When a tool call is denied or prompted during this session, silently classify it (safe → allow, destructive → deny, shared-state → ask-first) and note it briefly in one line. Do NOT update settings immediately. Collect all permission notes and propose a batch update at the end of the session or when the user runs /update-permissions. Never add broad wildcards like npx:* or node:*."
+            "prompt": "Permission policy is active. When ANY tool call is prompted or denied, classify it using this framework (in order):\n\n1. Can it destroy unrecoverable data? (rm -rf, git push --force, git reset --hard, DROP TABLE) → DENY\n2. Can it bypass permission rules? (node -e, python -c, bash -c, eval) → DENY\n3. Does it affect shared state visible to others? (git push, gh pr create, curl POST) → ASK FIRST\n4. Does it change local context in hard-to-undo ways? (git checkout <branch>, git merge, mv, kill) → ASK FIRST\n5. Is it read-only, local-only, or easily reversible via git? (reads, searches, build, test, lint, git add/commit) → ALLOW\n\nWhen uncertain, default to ASK FIRST.\n\nBehavior: Note each prompted/denied command in ONE line (e.g. 'Noted: `pnpm audit` → allow, read-only'). Do NOT update settings mid-session. Continue with the task.\n\nPattern format: Bash(<command prefix>:*) — always use specific prefixes. NEVER add broad wildcards like Bash(npx:*), Bash(node:*), or Bash(bash:*).\n\nAt session end or when asked, invoke /manage-permissions to cross-reference all tools used against allow lists and propose a batch update."
           }
         ]
       }
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Before ending: if any permission prompts or denials were collected during this session, remind the user and offer to run /update-permissions to batch-apply them. If none were collected, say nothing."
+            "prompt": "Before ending: cross-reference every tool you used this session against the allow lists in ~/.claude/settings.json and .claude/settings.local.json. If ANY tool you used is missing from both allow lists, invoke /manage-permissions to propose a batch update. If every tool is already covered, say nothing."
           }
         ]
       }
